@@ -1,7 +1,12 @@
 # Serverless Data Processing Pipeline on AWS
 
 ## 📌 Project Overview
-This project demonstrates how to build a **serverless, event-driven data processing pipeline** using AWS managed services. 
+In this project, I designed and implemented a serverless, event-driven data processing pipeline using AWS managed services.
+The goal was to understand how cloud-native systems process data automatically without managing servers.
+
+The pipeline reacts to file uploads in Amazon S3, processes the event using AWS Lambda, stores results in Amazon DynamoDB, and records execution logs in Amazon CloudWatch.
+
+This project helped me gain hands-on experience with serverless architecture, event triggers, IAM roles, and AWS monitoring.
 
 ### How it works:
 1. **Trigger:** A file is uploaded to an Amazon S3 bucket.
@@ -15,76 +20,40 @@ This project demonstrates how to build a **serverless, event-driven data process
 
 ## 🏗️ Architecture Diagram (Logical Flow)
 `S3 Bucket (Upload) ➔ S3 Event Notification ➔ AWS Lambda (Python) ➔ DynamoDB Table`
+<img width="521" height="340" alt="image" src="https://github.com/user-attachments/assets/142b0e34-6682-40f3-a1e3-b12bfba955fc" />
+
+<img width="794" height="239" alt="image" src="https://github.com/user-attachments/assets/8af6a1f1-bb2c-46e1-8f3e-d5d9c88ea8f1" />
 
 ---
 
-
-\## 🎯 What You Will Learn
-
-\- Event-driven serverless architecture
-
-\- S3 event notifications
-
-\- Lambda function creation and execution
-
-\- DynamoDB data storage
-
-\- CloudWatch log monitoring
-
-\- Secure default AWS configurations
-
-
-
+## 🛠️ AWS Services Used
+* **Amazon S3:** Scalable object storage for input files.
+* **AWS Lambda:** Serverless compute for processing metadata.
+* **Amazon DynamoDB:** NoSQL database for storing processed results.
+* **Amazon CloudWatch:** Real-time logging and monitoring.
+* **IAM:** Role-based access control for secure service communication.
 ---
 
 
+## STEP 1: Create an S3 Bucket
 
-\## 🧱 Step-by-Step Implementation Guide
-
-
-
----
-
-
-
-\## STEP 1: Create an S3 Bucket
-
-
-
-\### Go to:
-
+### Go to:
 AWS Console → S3 → Create bucket
 
+### Configuration:
+- **Bucket name**: `serverless-data-input-<unique-id>`
+- **Region**: Same region as Lambda and DynamoDB
+- **Object ownership**:  
+  ✅ ACLs disabled (Bucket owner enforced)
+- **Block public access**:  
+  ✅ Keep all options enabled
+- **Bucket versioning**: Disabled (optional)
+- **Encryption**:  
+  ✅ Enable SSE-S3 (Amazon S3 managed keys)
 
-
-\### Configuration:
-
-\- \*\*Bucket name\*\*: `serverless-data-input-<unique-id>`
-
-\- \*\*Region\*\*: Same region as Lambda and DynamoDB
-
-\- \*\*Object ownership\*\*:  
-
-&nbsp; ✅ ACLs disabled (Bucket owner enforced)
-
-\- \*\*Block public access\*\*:  
-
-&nbsp; ✅ Keep all options enabled
-
-\- \*\*Bucket versioning\*\*: Disabled (optional)
-
-\- \*\*Encryption\*\*:  
-
-&nbsp; ✅ Enable SSE-S3 (Amazon S3 managed keys)
-
-
-
-Click \*\*Create bucket\*\*.
-
-
+Click **Create bucket**.
 
 📸 Screenshot:
-
 !\[s3-bucket.](screenshots/01-s3-bucket-created.png)
 
 
@@ -93,31 +62,18 @@ Click \*\*Create bucket\*\*.
 
 ---
 
+## STEP 2: Create DynamoDB Table
 
-
-\## STEP 2: Create DynamoDB Table
-
-
-
-\### Go to:
-
+### Go to:
 AWS Console → DynamoDB → Tables → Create table
 
+### Configuration:
+- **Table name**: `ProcessedResults`
+- **Partition key**: `file_name` (String)
+- **Capacity mode**: On-demand
+- **Encryption**: Default (enabled)
 
-
-\### Configuration:
-
-\- \*\*Table name\*\*: `ProcessedResults`
-
-\- \*\*Partition key\*\*: `file\_name` (String)
-
-\- \*\*Capacity mode\*\*: On-demand
-
-\- \*\*Encryption\*\*: Default (enabled)
-
-
-
-Click \*\*Create table\*\* and wait for \*\*Status: Active\*\*.
+Click **Create table** and wait for **Status: Active**.
 
 
 
@@ -127,45 +83,24 @@ Click \*\*Create table\*\* and wait for \*\*Status: Active\*\*.
 
 
 
-
-
 ---
 
-
-
-\## STEP 3: Create Lambda Function
-
-
+## STEP 3: Create Lambda Function
 
 > ⚠️ Note: In restricted lab/sandbox environments, IAM role creation may be blocked.  
+> In that case, select the **pre-configured lab execution role**.
 
-> In that case, select the \*\*pre-configured lab execution role\*\*.
-
-
-
-\### Go to:
-
+### Go to:
 AWS Console → Lambda → Create function
 
+### Configuration:
+- **Author from scratch**
+- **Function name**: `serverless-data-processor`
+- **Runtime**: Python 3.12
+- **Execution role**:  
+  ✅ Use existing role (LabRole / VocLabsRole / AWSAcademyRole)
 
-
-\### Configuration:
-
-\- \*\*Author from scratch\*\*
-
-\- \*\*Function name\*\*: `serverless-data-processor`
-
-\- \*\*Runtime\*\*: Python 3.12
-
-\- \*\*Execution role\*\*:  
-
-&nbsp; ✅ Use existing role (LabRole / VocLabsRole / AWSAcademyRole)
-
-
-
-Click \*\*Create function\*\*.
-
-
+Click **Create function**.
 
 📸 Screenshot:
 
@@ -179,178 +114,111 @@ Click \*\*Create function\*\*.
 
 ---
 
-
-
-\## STEP 4: Add Lambda Code
-
-
+## STEP 4: Add Lambda Code
 
 Open the Lambda function → Code tab  
-
 Replace the default code with the following:
 
-
-
-```python
+``` python
 
 import json
-
 import boto3
 
-
-
 dynamodb = boto3.resource('dynamodb')
-
 table = dynamodb.Table('ProcessedResults')
 
+def lambda_handler(event, context):
+    record = event['Records'][0]
+    file_name = record['s3']['object']['key']
+    bucket_name = record['s3']['bucket']['name']
 
+    table.put_item(
+        Item={
+            'file_name': file_name,
+            'bucket': bucket_name,
+            'status': 'Processed'
+        }
+    )
 
-def lambda\_handler(event, context):
-
-&nbsp;   record = event\['Records']\[0]
-
-&nbsp;   file\_name = record\['s3']\['object']\['key']
-
-&nbsp;   bucket\_name = record\['s3']\['bucket']\['name']
-
-
-
-&nbsp;   table.put\_item(
-
-&nbsp;       Item={
-
-&nbsp;           'file\_name': file\_name,
-
-&nbsp;           'bucket': bucket\_name,
-
-&nbsp;           'status': 'Processed'
-
-&nbsp;       }
-
-&nbsp;   )
-
-
-
-&nbsp;   return {
-
-&nbsp;       'statusCode': 200,
-
-&nbsp;       'body': json.dumps('File processed successfully')
-
-&nbsp;   }
-
-
-
-
+    return {
+        'statusCode': 200,
+        'body': json.dumps('File processed successfully')
+    }
+```
 
 !\[04-lambda-code.](screenshots/04-lambda-code.png)
 
 
+---
 
-\## STEP 5: Add S3 Trigger to Lambda
+## Step 5: Configure S3 Event Trigger for Lambda
 
+To make the pipeline event-driven, I configured Amazon S3 to automatically invoke the Lambda function whenever a new file is uploaded.
 
+**Configuration details:**
+- Trigger source: Amazon S3
+- Event type: All object create events
+- Bucket: Serverless input bucket created earlier
+- Prefix/Suffix: Not used
 
-Inside Lambda → Function overview → Add trigger
+This ensures that **every file upload (PUT operation)** triggers the Lambda function without any manual intervention.
 
-
-
-\# Configuration:
-
-Trigger source: S3
-
-Bucket: Select the bucket created in Step 1
-
-Event type:
-
-✅ All object create events
-
-Prefix / Suffix: Leave empty
-
-Acknowledge recursive warning
-
-
+**Outcome:**  
+The pipeline is now fully automated and reacts in real time to incoming data.
 
 !\[05-s3-lambda-trigger.](screenshots/05-s3-lambda-trigger.png)
 
-
-
-STEP 6: Test the Pipeline (Final Proof)
-
-Upload a File
+---
 
 
 
-Go to:
+## Step 6: Validate End-to-End Data Processing
 
-S3 → Your bucket → Upload
+After configuring the trigger, I validated the complete serverless workflow.
 
-
-
-Upload any file:
-
-
-
-test.txt
-
-
-
-sample.csv
-
-
-
-hello.json
-
+### Test Performed
+1. Uploaded a test file (`test.txt`),heelo.json to the S3 bucket
+2. The S3 upload generated an event automatically
+3. The Lambda function was invoked without manual execution
+4. Lambda processed the event and wrote metadata to DynamoDB
 
 
 📸 Screenshot:
 
 !\[06-s3-file-uploaded.](screenshots/06-s3-file-uploaded.png)
 
+---
 
+## Step 7: Verify Data in DynamoDB
 
-Verify DynamoDB Output
+To confirm successful processing, I checked the DynamoDB table.
 
+**Observed result:**
+- A new item was created in the table
+- Stored attributes included:
+  - `file_name`
+  - `bucket`
+  - `status = Processed`
 
-
-Go to:
-
-DynamoDB → Tables → ProcessedResults → Explore table items
-
-
-
-You should see:
-
-
-
-file\_name: uploaded file name
-
-
-
-bucket: S3 bucket name
-
-
-
-status: Processed
-
-
+This confirmed that the Lambda function executed successfully and persisted the processed data.
 
 📸 Screenshot:
 
 
-
 !\[07-dynamodb-item.](screenshots/07-dynamodb-item.png)
+---
 
 
+## Step 8: Monitor Execution Using CloudWatch
 
-Verify CloudWatch Logs
+For observability and debugging, I reviewed the execution logs in Amazon CloudWatch.
 
+**What I verified:**
+- Lambda invocation logs
+- Successful execution without errors
+- Event metadata captured in logs
 
-
-Go to:
-
-CloudWatch → Logs → Log groups → /aws/lambda/serverless-data-processor
-
+CloudWatch provided visibility into the serverless execution flow and confirmed reliable operation.
 
 
 📸 Screenshot:
@@ -359,49 +227,26 @@ CloudWatch → Logs → Log groups → /aws/lambda/serverless-data-processor
 
 
 
-🔐 Security Best Practices Followed
+---
+
+## Final Outcome
+
+The serverless data processing pipeline works end-to-end:
+
+- File uploads trigger processing automatically
+- No servers are provisioned or managed
+- Data is processed and stored reliably
+- Logs are available for monitoring and troubleshooting
+
+This implementation demonstrates a **production-style, event-driven serverless architecture** using AWS managed services.
 
 
-
-S3 bucket is private by default
-
+## 🧠 Key Learnings
 
 
-No public access enabled
-
-
-
-Server-side encryption enabled
-
-
-
-IAM permissions handled via execution role
-
-
-
-No credentials hard-coded
-
-
-
-🧠 Key Learnings
-
-
-
-Serverless event-driven architecture
-
-
-
-AWS managed services integration
-
-
-
-Real-time data processing
-
-
-
-Cloud monitoring with CloudWatch
-
-
-
-Cost-efficient cloud design
+- Serverless event-driven architecture
+- AWS managed services integration
+- Real-time data processing
+- Cloud monitoring with CloudWatch
+- Cost-efficient cloud design
 
