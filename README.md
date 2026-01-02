@@ -54,7 +54,7 @@ AWS Console → S3 → Create bucket
 Click **Create bucket**.
 
 📸 Screenshot:
-!\[s3-bucket.](screenshots/01-s3-bucket-created.png)
+![s3-bucket](screenshots/01-s3-bucket-created.png)
 
 
 
@@ -79,7 +79,7 @@ Click **Create table** and wait for **Status: Active**.
 
 📸 Screenshot:
 
-!\[02-dynamodb-table.](screenshots/02-dynamodb-table.png)
+![02-dynamodb-table](screenshots/02-dynamodb-table.png)
 
 
 
@@ -106,7 +106,7 @@ Click **Create function**.
 
 
 
-!\[03-lambda-function-role.](screenshots/03-lambda-function-role.png)
+![03-lambda-function-role.](screenshots/03-lambda-function-role.png)
 
 
 
@@ -146,7 +146,7 @@ def lambda_handler(event, context):
     }
 ```
 
-!\[04-lambda-code.](screenshots/04-lambda-code.png)
+![04-lambda-code.](screenshots/04-lambda-code.png)
 
 
 ---
@@ -166,7 +166,7 @@ This ensures that **every file upload (PUT operation)** triggers the Lambda func
 **Outcome:**  
 The pipeline is now fully automated and reacts in real time to incoming data.
 
-!\[05-s3-lambda-trigger.](screenshots/05-s3-lambda-trigger.png)
+![05-s3-lambda-trigger.](screenshots/05-s3-lambda-trigger.png)
 
 ---
 
@@ -185,7 +185,7 @@ After configuring the trigger, I validated the complete serverless workflow.
 
 📸 Screenshot:
 
-!\[06-s3-file-uploaded.](screenshots/06-s3-file-uploaded.png)
+![06-s3-file-uploaded.](screenshots/06-s3-file-uploaded.png)
 
 ---
 
@@ -205,7 +205,7 @@ This confirmed that the Lambda function executed successfully and persisted the 
 📸 Screenshot:
 
 
-!\[07-dynamodb-item.](screenshots/07-dynamodb-item.png)
+![07-dynamodb-item.](screenshots/07-dynamodb-item.png)
 ---
 
 
@@ -223,7 +223,7 @@ CloudWatch provided visibility into the serverless execution flow and confirmed 
 
 📸 Screenshot:
 
-!\[08-cloudwatch-logs.](screenshots/08-cloudwatch-logs.png)
+![08-cloudwatch-logs.](screenshots/08-cloudwatch-logs.png)
 
 
 
