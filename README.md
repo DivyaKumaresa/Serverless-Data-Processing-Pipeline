@@ -1,59 +1,22 @@
-\# Serverless Data Processing Pipeline on AWS
+# Serverless Data Processing Pipeline on AWS
 
+## 📌 Project Overview
+This project demonstrates how to build a **serverless, event-driven data processing pipeline** using AWS managed services. 
 
+### How it works:
+1. **Trigger:** A file is uploaded to an Amazon S3 bucket.
+2. **Compute:** An AWS Lambda function is automatically triggered by the S3 event.
+3. **Storage:** The Lambda function extracts metadata and stores the result in Amazon DynamoDB.
+4. **Monitoring:** All execution logs are captured using Amazon CloudWatch.
 
-\## 📌 Project Overview
-
-This project demonstrates how to build a \*\*serverless, event-driven data processing pipeline\*\* using AWS managed services.
-
-
-
-When a file is uploaded to an Amazon S3 bucket, an AWS Lambda function is automatically triggered.  
-
-The Lambda function processes the event metadata and stores the result in Amazon DynamoDB.  
-
-All execution logs are captured using Amazon CloudWatch.
-
-
-
-I built a \* \* serverless data processing pipeline \* \* where S3 upload events trigger a Lambda function that processes metadata and stores results in DynamoDB, with logs captured in CloudWatch. 
-
-
-
-This project was implemented and tested in a temporary cloud/lab environment.
-
-The same architecture can be recreated in a personal AWS account without changes.
+> **Note:** This project was implemented and tested in a temporary cloud/lab environment, but the architecture is fully compatible with personal AWS accounts.
 
 ---
 
-
-
-\## 🏗️ Architecture Diagram (Logical Flow)
-
-
-
-
+## 🏗️ Architecture Diagram (Logical Flow)
+`S3 Bucket (Upload) ➔ S3 Event Notification ➔ AWS Lambda (Python) ➔ DynamoDB Table`
 
 ---
-
-
-
-\## 🛠️ AWS Services Used
-
-\- Amazon S3
-
-\- AWS Lambda
-
-\- Amazon DynamoDB
-
-\- Amazon CloudWatch
-
-\- IAM (execution role – lab managed)
-
-
-
----
-
 
 
 \## 🎯 What You Will Learn
